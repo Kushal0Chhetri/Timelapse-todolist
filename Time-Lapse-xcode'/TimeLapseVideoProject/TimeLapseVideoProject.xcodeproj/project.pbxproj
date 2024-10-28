@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		990721F12C471766000ED488 /* applescript.csv in Resources */ = {isa = PBXBuildFile; fileRef = 990721EF2C471766000ED488 /* applescript.csv */; };
+		4A1EB6F32CD043760091E6A8 /* applescript.csv in Resources */ = {isa = PBXBuildFile; fileRef = 4A1EB6F22CD043760091E6A8 /* applescript.csv */; };
 		990721F32C472713000ED488 /* ApplescriptFileLoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 990721F22C472713000ED488 /* ApplescriptFileLoad.swift */; };
 		EA00F620294D227800D54360 /* setVideoPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA00F61E294D227800D54360 /* setVideoPath.swift */; };
 		EA00F621294D227800D54360 /* setVideoPath.xib in Resources */ = {isa = PBXBuildFile; fileRef = EA00F61F294D227800D54360 /* setVideoPath.xib */; };
@@ -40,7 +40,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		990721EF2C471766000ED488 /* applescript.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = applescript.csv; path = ../../../applescript.csv; sourceTree = "<group>"; };
+		4A1EB6F22CD043760091E6A8 /* applescript.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = applescript.csv; sourceTree = "<group>"; };
 		990721F22C472713000ED488 /* ApplescriptFileLoad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplescriptFileLoad.swift; sourceTree = "<group>"; };
 		EA00F61E294D227800D54360 /* setVideoPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = setVideoPath.swift; sourceTree = "<group>"; };
 		EA00F61F294D227800D54360 /* setVideoPath.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = setVideoPath.xib; sourceTree = "<group>"; };
@@ -126,8 +126,8 @@
 				EA00F622294D254300D54360 /* alertDialog.swift */,
 				EA0383372941427000FAC0A0 /* ScreenshotInfo.swift */,
 				EA0383392941439300FAC0A0 /* takeScreenshot.swift */,
+				4A1EB6F22CD043760091E6A8 /* applescript.csv */,
 				990721F22C472713000ED488 /* ApplescriptFileLoad.swift */,
-				990721EF2C471766000ED488 /* applescript.csv */,
 				EA03833B29414FE600FAC0A0 /* imagesToVideo.swift */,
 				EA03834329427D4400FAC0A0 /* videoWatchWindow.swift */,
 				EA03834429427D4400FAC0A0 /* videoWatchWindow.xib */,
@@ -235,7 +235,7 @@
 				EA00F621294D227800D54360 /* setVideoPath.xib in Resources */,
 				EAF1010C28D12BB600065763 /* Main.storyboard in Resources */,
 				EA03834629427D4400FAC0A0 /* videoWatchWindow.xib in Resources */,
-				990721F12C471766000ED488 /* applescript.csv in Resources */,
+				4A1EB6F32CD043760091E6A8 /* applescript.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

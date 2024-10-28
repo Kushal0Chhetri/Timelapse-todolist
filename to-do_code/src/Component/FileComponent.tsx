@@ -77,19 +77,6 @@ const FileComponent: React.FC<FileProps> = ({ file, onUpdate, onDelete }) => {
                 <div className="col">
                   <div className="modal-title h4">Edit File</div>
                 </div>
-                <div className="col-auto">
-                  <button
-                    type="button"
-                    className="btn-close"
-                    aria-label="Close"
-                    onClick={handleCloseModal}
-                  >
-                    <FontAwesomeIcon
-                      icon={faTimes}
-                      className="cursor-pointer"
-                    />
-                  </button>
-                </div>
               </div>
             </Modal.Header>
 

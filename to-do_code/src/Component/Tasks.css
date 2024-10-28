@@ -1,52 +1,263 @@
-/* Task.css */
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
-    z-index: 1040; /* Higher than default modal */
-  }
-  
-  .custom-modal {
-    z-index: 1050; /* Ensure modal is on top */
+/* Tooltip Container */
+.tools-container {
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    /* Smooth transition for visibility */
+}
+
+/* Show the icons when hovering over the task-wrapper */
+.task-wrapper:hover .tools-container {
+    opacity: 1;
+}
+
+.tool-button {
+    background: none;
+}
+
+.tool-button .icon {
+    font-size: 16px;
+    color: #16191c;
+    background: none;
+}
+
+.tool-button:hover {
+    background-color: rgb(239, 237, 237);
+}
+
+/* Tooltip Text */
+.tooltip-text {
+    visibility: hidden;
+    width: 110px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
     position: absolute;
-    top: 50%;
+    z-index: 1;
+    bottom: 125%;
     left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  
-  .custom-modal .modal-dialog {
-    max-width: 600px; /* Adjust the maximum width of the modal */
-    width: 90%; /* Adjust the width of the modal */
-  }
-  
-  .custom-modal .modal-content {
-    padding: 20px; /* Optional: Adjust padding inside the modal content */
-  }
-  
-  .custom-modal .modal-body {
-    padding: 20px; /* Adjust padding inside the modal body */
-  }
-  
-  .custom-modal .modal-footer {
-    padding: 15px; /* Adjust padding inside the modal footer */
-  }
-  
-  .custom-modal .form-group {
-    margin-bottom: 1rem; /* Increase space between form groups */
-  }
-  
-  .custom-modal .form-label {
-    margin-bottom: 0.5rem; /* Space between label and input */
-  }
-  
-  .file-row {
-    transition: background-color 0.3s ease;
-  }
-  
-  .file-row:hover {
-    background-color: #f0f0f0; /* Adjust the highlight color as needed */
-  }
-  
+    transform: translateX(50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* Show Tooltip on Hover */
+.tool-button:hover .tooltip-text {
+    visibility: visible;
+    opacity: 0.8;
+}
+
+/* Checkbox Styling */
+input[type="checkbox"] {
+    appearance: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #000;
+    display: inline-block;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #3D9970;
+    border: none;
+    position: relative;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '\2713';
+    color: white;
+    font-weight: 600;
+    position: absolute;
+    left: 2px;
+    top: -2px;
+}
+
+/* Task Styling */
+.task-wrapper {
+    width: 100%;
+    padding: 10px;
+    transform: translateY(0);
+    transition: transform 0.4s, opacity 0.4s;
+}
+
+.completed-task {
+    opacity: 0.7;
+    transform: translateY(20px);
+}
+
+.task-wrapper:hover {
+    background-color: white;
+}
+
+.task-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.task-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.task-name {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+    color: black;
+    font-size: 0.94rem;
+    margin: 0;
+    align-items: center;
+    margin-left: 10px;
+    position: relative;
+}
+
+.due-date {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #616161;
+    font-size: 0.84rem;
+    margin-top: 5px;
+    margin-left: 10px;
+}
+
+.calendar-icon {
+    color: #616161;
+}
+
+/* File Dropdown Styling */
+.file-dropdown-row {
+    margin-top: 10px;
+    padding-left: 10px;
+}
+
+.dropdown-icon {
+    margin-top: 3px;
+}
+
+.file-dropdown-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 0.94rem;
+    padding: 5px 0;
+    display: flex;
+    justify-content: left;
+    margin-left: 15px;
+}
+
+.file-dropdown-btn span {
+    margin-left: 6px;
+}
+
+.file-dropdown-btn:hover {
+    text-decoration: none;
+}
+
+.file-dropdown-btn:focus {
+    outline: none;
+}
+
+.file-list {
+    padding-top: 10px;
+}
+
+.file-list p {
+    font-size: 14px;
+    color: #666;
+}
+
+/* New file-list styling */
+.file-list {
+    margin-top: 10px;
+    transition: max-height 0.4s ease-in-out;
+}
+
+.dropdown-icon {
+    transition: transform 0.3s ease-in-out;
+}
+
+.dropdown-icon.rotate {
+    transform: rotate(180deg);
+}
+
+/** Styling add files button **/
+.add-files-button {
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    color: #3f3f3f;
+    font-weight: 500;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.94rem;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+    padding: 10px 15px;
+    margin-top: -16px;
+}
+
+.add-files-button:hover {
+    transform: translateY(-3px);
+    color: black;
+    cursor: pointer;
+}
+
+.add-files-button:focus {
+    outline: none;
+}
+
+.add-files-button i {
+    font-size: 1rem;
+}
+
+/* Styles for the Delete Confirmation Modal */
+.delete-confirmation-modal .modal-header {
+    /* Light red background */
+    border-bottom: 1px solid #f5c6cb;
+    /* Red border */
+    color: #721c24;
+    /* Dark red text color */
+}
+
+.delete-confirmation-modal .modal-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 20px;
+    height: 50%;
+}
+
+.delete-confirmation-modal .modal-footer {
+    border-top: 1px solid #f5c6cb;
+}
+
+/* Style buttons differently in the delete modal */
+.delete-confirmation-modal .btn-secondary {
+    background-color: #6c757d;
+    /* Grey for cancel button */
+    border-color: #6c757d;
+}
+
+.delete-confirmation-modal .btn-danger {
+    background-color: #dc3545;
+    /* Bright red for delete button */
+    border-color: #dc3545;
+}
+
+.delete-confirmation-modal .overlay {
+    background: rgba(0, 0, 0, 0.5);
+    /* Darker overlay background */
+}

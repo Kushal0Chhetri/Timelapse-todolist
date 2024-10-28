@@ -90,6 +90,7 @@ export interface Task {
   taskName: string;
   files: File[];
   dueDate: string;
+  completed: boolean;
 }
 
 export interface File {

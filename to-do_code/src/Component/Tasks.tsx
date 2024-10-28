@@ -1,26 +1,31 @@
 import React, { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Task as TaskType, File as CustomFile } from "../TaskData"; // Import the custom File type
+import { Task as TaskType, File as CustomFile } from "../TaskData";
 import FileComponent from "./FileComponent";
 import {
-  faPlus,
   faPencilAlt,
   faTrash,
-  faChevronDown,
+  faCalendarAlt,
+  faChevronCircleRight,
+  faChevronCircleDown,
+  faFileUpload,
+  faPlus
 } from "@fortawesome/free-solid-svg-icons";
 import "./Tasks.css";
+import { CSSTransition, TransitionGroup } from "react-transition-group"; // New imports for animation
 
 interface TaskProps {
   task: TaskType;
-  onUpdateFile: (taskId: string, updatedFile: CustomFile) => void; // Use the custom File type
+  onUpdateFile: (taskId: string, updatedFile: CustomFile) => void;
   onDeleteFile: (taskId: string, fileId: string) => void;
   onUpdateTask: (
     taskId: string,
     updatedTask: { taskName: string; dueDate: string }
   ) => void;
-  onAddFile: (taskId: string, newFile: CustomFile) => void; // Use the custom File type
+  onAddFile: (taskId: string, newFile: CustomFile) => void;
   onDeleteTask: (taskId: string) => void;
+  onCheckboxChange: (taskId: string, isChecked: boolean) => void; // New prop for handling checkbox
 }
 
 const Task: React.FC<TaskProps> = ({
@@ -30,55 +35,137 @@ const Task: React.FC<TaskProps> = ({
   onUpdateTask,
   onAddFile,
   onDeleteTask,
+  onCheckboxChange,
 }) => {
   const { id, taskName, files, dueDate } = task;
-  const [isOpen, setIsOpen] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [addFileModal, setAddFileModal] = useState(false);
   const [newTaskName, setNewTaskName] = useState(taskName);
   const [newDueDate, setNewDueDate] = useState(dueDate);
   const [newFileName, setNewFileName] = useState("");
-  const [newFile, setNewFile] = useState<File | null>(null); // Use the native File type
-
-  const toggle = () => setIsOpen(!isOpen);
+  const [newFile, setNewFile] = useState<File | null>(null);
+  const [isFileDropdownOpen, setIsFileDropdownOpen] = useState(false); // Toggle for file dropdown
   const toggleEditModal = () => setEditModal(!editModal);
   const toggleAddFileModal = () => setAddFileModal(!addFileModal);
+  const toggleFileDropdown = () => setIsFileDropdownOpen(!isFileDropdownOpen); // Toggle function for dropdown
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<"task" | "file">("task");
+  const [fileIdToDelete, setFileIdToDelete] = useState<string | null>(null);
+
+
+  const confirmDeleteTask = () => {
+    setDeleteTarget("task");
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteFile = (fileId: string) => {
+    setDeleteTarget("file");
+    setFileIdToDelete(fileId);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirmation = () => {
+    if (deleteTarget === "task") {
+      onDeleteTask(id);
+    } else if (deleteTarget === "file" && fileIdToDelete) {
+      handleDeleteFile(fileIdToDelete);
+    }
+    setShowDeleteModal(false);
+  };
+
 
   const handleUpdateFile = (updatedFile: CustomFile) => {
     onUpdateFile(id, updatedFile);
   };
 
-  const handleDeleteFile = (fileId: string) => {
-    onDeleteFile(id, fileId);
+  const handleDeleteFile = async (fileId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/delete-file/${fileId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete file");
+      }
+
+      // Assuming the API returns a success message or status
+      console.log("File deleted successfully");
+
+      // Call your `onDeleteFile` function to update the UI
+      onDeleteFile(id, fileId);
+    } catch (error) {
+      console.error("Error deleting file:", error);
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    const [year, month, day] = dateString.split("-");
-    return `${month}/${day}/${year}`;
-  };
 
-  const handleUpdateTask = () => {
-    const formattedDueDate = formatDate(newDueDate);
-    onUpdateTask(id, { taskName: newTaskName, dueDate: formattedDueDate });
+  const handleEditTask = () => {
+    onUpdateTask(id, { taskName: newTaskName, dueDate: newDueDate });
     toggleEditModal();
   };
 
-  const handleAddFile = () => {
-    if (newFile) {
-      const fileToAdd: CustomFile = {
+  const handleAddFile = async () => {
+    if (newFile && newFileName.trim() !== "") {
+      const newFileObj: CustomFile = {
         id: Date.now().toString(),
         fileName: newFileName,
         location: URL.createObjectURL(newFile as Blob), // Use type assertion here
       };
-      onAddFile(id, fileToAdd);
-      setNewFile(null); // Clear the file input after adding
+
+      try {
+        const response = await fetch("http://localhost:3000/add-file", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fileName: newFileName,
+            fileLocation: URL.createObjectURL(newFile), // Use the file location here
+            taskId: id, // Pass the task ID
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add file");
+        }
+
+        const addedFile = await response.json();
+        console.log("File added successfully:", addedFile);
+
+        // Add the new file to the task's files
+        onAddFile(id, newFileObj);
+        setNewFileName("");
+        setNewFile(null);
+        toggleAddFileModal();
+        toggleFileDropdown();
+      } catch (error) {
+        console.error("Error adding file:", error);
+        alert("Failed to add file, please try again.");
+      }
     }
-    setNewFileName("");
-    toggleAddFileModal();
   };
 
-  const handleDeleteTask = () => {
-    onDeleteTask(id);
+  // Function to fetch files when user clicks the dropdown
+  const fetchFilesOnDropdownClick = async () => {
+    if (!isFileDropdownOpen && files.length === 0) { // Fetch files only if not already loaded
+      try {
+        const response = await fetch(`http://localhost:3000/get-files/${id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch files");
+        }
+        const filesData = await response.json();
+        console.log("Fetched files data: ", filesData); // Add this line
+        filesData.forEach((file: CustomFile) => onAddFile(id, file)); // Add each file to the task
+      } catch (error) {
+        console.error("Error fetching files:", error);
+      }
+    }
+    setIsFileDropdownOpen(!isFileDropdownOpen); // Toggle dropdown
+  };
+
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onCheckboxChange(id, e.target.checked); // Notify parent component
   };
 
   const handleFileInputChange = (
@@ -89,83 +176,103 @@ const Task: React.FC<TaskProps> = ({
     }
   };
 
+  const handleDeleteTask = () => {
+    onDeleteTask(id);
+  };
+
   return (
     <>
-      <tr id={id} className="">
-        <td className="text-center">
-          <input type="checkbox" className="form-check-input" value={id} />
-        </td>
-        <td className="text-center">{taskName}</td>
-        <td className="text-center">
-          <button onClick={toggle} className="file-count-button">
-            {files.length}
-            <FontAwesomeIcon icon={faChevronDown} className="icon" />
-          </button>
-        </td>
-        <td className="text-center">{dueDate}</td>
-        <td className="text-center">
-          <div className="tools-container">
-            <button onClick={toggleAddFileModal} className="tool-button">
-              <FontAwesomeIcon icon={faPlus} className="icon" />
-            </button>
-            <button onClick={toggleEditModal} className="tool-button">
-              <FontAwesomeIcon icon={faPencilAlt} className="icon" />
-            </button>
-            <button onClick={handleDeleteTask} className="tool-button">
-              <FontAwesomeIcon icon={faTrash} className="icon" />
-            </button>
-          </div>
-        </td>
-      </tr>
-      {isOpen && (
-        <tr id={`note-${id}`} className="">
-          <td colSpan={5}>
-            <div className="well">
-              <table id="files" className="table table-hover">
-                <tbody>
-                  {files.map((file) => (
-                    <FileComponent
-                      key={file.id}
-                      file={file}
-                      onUpdate={handleUpdateFile}
-                      onDelete={() => handleDeleteFile(file.id)}
-                    />
-                  ))}
-                </tbody>
-              </table>
+      <div className={`task-wrapper ${task.completed ? 'completed-task' : ''}`}>
+        <div className="task-row">
+          <input
+            type="checkbox"
+            onChange={handleCheckboxChange}
+            className="custom-checkbox"
+          />
+          <div className="task-container">
+            <div className="task-name">
+              <span>{taskName}</span>
+              <div className="tools-container">
+                <button onClick={toggleEditModal} className="tool-button">
+                  <FontAwesomeIcon icon={faPencilAlt} className="icon" />
+                  <div className="tooltip-text">Edit Task</div>
+                </button>
+                <button onClick={confirmDeleteTask} className="tool-button">
+                  <FontAwesomeIcon icon={faTrash} className="icon" />
+                  <div className="tooltip-text">Delete Task</div>
+                </button>
+              </div>
             </div>
-          </td>
-        </tr>
-      )}
 
-      {/* Modal for editing task */}
+            <div className="due-date">
+              <FontAwesomeIcon icon={faCalendarAlt} className="calendar-icon" />
+              <span>{`Due ${new Date(dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="file-dropdown-row">
+          <button className="file-dropdown-btn" onClick={fetchFilesOnDropdownClick}>
+            <FontAwesomeIcon
+              icon={isFileDropdownOpen ? faChevronCircleDown : faChevronCircleRight}
+              className="dropdown-icon"
+            />
+            <span>{isFileDropdownOpen ? " View Resources" : " View Resources"}</span>
+          </button>
+          {isFileDropdownOpen && (
+            <div className="file-list">
+              {/* Add Files button */}
+              <button className="add-files-button" onClick={toggleAddFileModal}>
+                <FontAwesomeIcon icon={faPlus} className="plus-icon" />
+                <span>Add Files</span>
+              </button>
+
+              {files.length > 0 ? (
+                files.map((file) => (
+                  <FileComponent
+                    key={file.id}
+                    file={file}
+                    onUpdate={handleUpdateFile}
+                    onDelete={() => handleDeleteFile(file.id)}
+                  />
+                ))
+              ) : (
+                <p>No files attached</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+
+      {/* Modal for editing a task */}
       {editModal && (
         <>
-          <div className="overlay" onClick={() => setEditModal(false)} />
+          <div className="overlay" onClick={toggleEditModal} />
           <Modal
             show={editModal}
             onHide={toggleEditModal}
             className="custom-modal"
           >
-            <Modal.Header closeButton>
+            <Modal.Header>
               <Modal.Title>Edit Task</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <Form>
                 <Form.Group>
-                  <Form.Label htmlFor="taskName">Task Name</Form.Label>
+                  <Form.Label htmlFor="editTaskName">Task Name</Form.Label>
                   <Form.Control
                     type="text"
-                    id="taskName"
+                    id="editTaskName"
                     value={newTaskName}
                     onChange={(e) => setNewTaskName(e.target.value)}
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label htmlFor="dueDate">Due Date</Form.Label>
+                  <Form.Label htmlFor="editDueDate">Due Date</Form.Label>
                   <Form.Control
                     type="date"
-                    id="dueDate"
+                    id="editDueDate"
                     value={newDueDate}
                     onChange={(e) => setNewDueDate(e.target.value)}
                   />
@@ -176,24 +283,24 @@ const Task: React.FC<TaskProps> = ({
               <Button variant="secondary" onClick={toggleEditModal}>
                 Cancel
               </Button>
-              <Button variant="primary" onClick={handleUpdateTask}>
-                Save Changes
+              <Button variant="primary" onClick={handleEditTask}>
+                Save
               </Button>
             </Modal.Footer>
           </Modal>
         </>
       )}
 
-      {/* Modal for adding new file */}
+      {/* Modal for adding a new file */}
       {addFileModal && (
         <>
-          <div className="overlay" onClick={() => setAddFileModal(false)} />
+          <div className="overlay" onClick={toggleAddFileModal} />
           <Modal
             show={addFileModal}
             onHide={toggleAddFileModal}
             className="custom-modal"
           >
-            <Modal.Header closeButton>
+            <Modal.Header>
               <Modal.Title>Add New File</Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -208,10 +315,10 @@ const Task: React.FC<TaskProps> = ({
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label htmlFor="fileInput">File Upload</Form.Label>
+                  <Form.Label htmlFor="file">File</Form.Label>
                   <Form.Control
                     type="file"
-                    id="fileInput"
+                    id="file"
                     onChange={handleFileInputChange}
                   />
                 </Form.Group>
@@ -223,6 +330,43 @@ const Task: React.FC<TaskProps> = ({
               </Button>
               <Button variant="primary" onClick={handleAddFile}>
                 Add File
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        </>
+      )}
+
+      {/* Modal for confirming deleting */}
+      {showDeleteModal && (
+        <>
+          <div className="overlay" onClick={() => setShowDeleteModal(false)} />
+          <Modal
+            show={showDeleteModal}
+            onHide={() => setShowDeleteModal(false)}
+            className="custom-modal delete-confirmation-modal" // Added custom class here
+          >
+            <Modal.Header>
+              <Modal.Title>Confirm Deletion</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>Are you sure you want to delete this {deleteTarget}?</p>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  if (deleteTarget === "task") {
+                    handleDeleteTask(); // Call the actual delete function for tasks
+                  } else if (deleteTarget === "file") {
+                    //handleDeleteFile(fileIdToDelete); // Call the actual delete function for files
+                  }
+                  setShowDeleteModal(false); // Close the modal after deletion
+                }}
+              >
+                Delete
               </Button>
             </Modal.Footer>
           </Modal>
