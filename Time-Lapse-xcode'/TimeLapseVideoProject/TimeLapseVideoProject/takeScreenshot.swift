@@ -13,7 +13,21 @@ import AppKit
 
 class takeScreenshots{
     
+    // Property to store current recording's output file URL
+    private var currentOutputURL: URL?
     var tempFolderPathString: String!
+    private var isRecording: Bool = false  // Add this to track recording state
+    
+    // Call this when user starts recording
+    func startRecording() {
+        isRecording = true
+        setupOutputFile()  // Create output file once at start
+    }
+    
+    // Call this when user stops recording
+    func stopRecording() {
+        isRecording = false
+    }
     
     // return current year
     func getCurrentYear() -> String{
@@ -89,7 +103,8 @@ class takeScreenshots{
     
     // function to take a screenshot with customsized arguments with formatted date name
     func takeANewScreenshotWithFormattedDateName(){
-        
+        // Setup output file at the start of recording
+        // setupOutputFile()
         let date = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "YYYY.MM.dd,HH-mm-ss"
@@ -159,6 +174,34 @@ class takeScreenshots{
         
         
     }
+    
+    // Function to setup output file when recording starts
+    func setupOutputFile() {
+        // Only create new file if not already recording
+        if currentOutputURL == nil {
+            guard let homeURL = getPath() else {
+                print("Failed to get home directory URL.")
+                return
+            }
+
+            let mainDirectory = homeURL.appendingPathComponent("Documents/TimeLapseVideo")
+            let outputDirectory = mainDirectory.appendingPathComponent("Output JSON")
+            
+            do {
+                try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+                
+                // Use date for filename instead of timestamp
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "MMddyyyy"
+                let dateString = dateFormatter.string(from: Date())
+                currentOutputURL = outputDirectory.appendingPathComponent("output_\(dateString).json")
+                print("Created new output file at: \(currentOutputURL?.path ?? "nil")")
+            } catch {
+                print("Error creating directory: \(error)")
+            }
+        }
+    }
+    
     // step 1: front most applicaiton name
     // step 2: read the csv file to get applescripts
     // step 3: a for loop: getting the corresponding applescritps based on the front most application name
@@ -199,10 +242,17 @@ class takeScreenshots{
                     let fileNameResult = executeAppleScript(applescript: stringResult)
                     print("Name Script Result: ", fileNameResult)
                     
+                    // Get current timestamp in MMddyyyy_HHmmss format
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "MMddyyyy_HHmmss"
+                    let timestamp = dateFormatter.string(from: Date())
+                    
                     // Prepare dictionary for JSON
                     let softwareResult: [String: Any] = ["SoftwareName": softwareName,
                                                          "Location": locationResult,
-                                                         "Filename": fileNameResult]
+                                                         "Filename": fileNameResult,
+                                                         "Timestamp": timestamp
+                                                        ]
                     
                     // Add software result to the array
                     resultsArray.append(softwareResult)
@@ -212,20 +262,11 @@ class takeScreenshots{
 
             // Convert resultsArray to JSON Data
             do {
-                // Get the home directory URL
-                guard let homeURL = getPath() else {
-                    print("Failed to get home directory URL.")
+                guard let fileURL = currentOutputURL else {
+                    print("No output file URL set")
                     return
                 }
 
-                // Append additional directory and file name
-                let directoryURL = homeURL.appendingPathComponent("Documents/TimeLapseVideo", isDirectory: true)
-                let fileURL = directoryURL.appendingPathComponent("output.json")
-
-                // Create directory if it doesn't exist
-                try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
-
-                // Check if output.json exists
                 var jsonData: Data
                 if FileManager.default.fileExists(atPath: fileURL.path) {
                     // Append to existing JSON file
@@ -245,7 +286,6 @@ class takeScreenshots{
             } catch {
                 print("Error writing JSON data: \(error)")
             }
-
         } else {
             print("Failed to load or parse CSV file \(csvFileName)")
         }

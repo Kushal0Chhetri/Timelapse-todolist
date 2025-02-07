@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
 import Plyr from "plyr";
-import "plyr/dist/plyr.css"; // Import Plyr CSS
-import { Video } from "../TaskData";
-import "./MediaPlayer.css"; // Import your own CSS
+import "plyr/dist/plyr.css";
+import { Video, File } from "../TaskData";
+import "./MediaPlayer.css";
+import FileCard from './FileCard';
 
 interface MediaPlayerProps {
   video: Video;
@@ -10,53 +11,68 @@ interface MediaPlayerProps {
 
 const MediaPlayer: React.FC<MediaPlayerProps> = ({ video }) => {
   const playerRef = useRef<HTMLDivElement>(null);
+  const metadataArrayRef = useRef<File[]>([]);  // Use ref for metadata array
   const [pauseTimestamp, setPauseTimestamp] = useState<number | null>(null);
   const [actualDuration, setActualDuration] = useState<number | null>(null);
+  const [currentMetadata, setCurrentMetadata] = useState<File | null>(null);
+
+  useEffect(() => {
+    // Extract date from video filename
+    const dateMatch = video.title.match(/TimeLapseVideo(\d{8})/);
+    if (dateMatch) {
+      const date = dateMatch[1];
+      fetchMetadata(date);
+    }
+  }, [video]);
+
+  const fetchMetadata = async (date: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/get-video-metadata/${date}`);
+      const data = await response.json();
+      metadataArrayRef.current = data;  // Store in ref instead of state
+    } catch (error) {
+      console.error('Failed to fetch metadata:', error);
+    }
+  };
+
+  const getCurrentMetadata = (currentTime: number) => {
+    let index = Math.floor(currentTime * 6);
+    console.log("time = ", currentTime);
+    console.log("index = ", index);
+    const metadata = metadataArrayRef.current[index];
+    if (metadata) {
+      return {
+        fileName: metadata.Filename,
+        location: metadata.Location,
+        softwareName: metadata.SoftwareName
+      };
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (playerRef.current) {
-      const videoElement = playerRef.current.querySelector(
-        "video"
-      ) as HTMLVideoElement | null;
+      const videoElement = playerRef.current.querySelector("video") as HTMLVideoElement | null;
 
       if (videoElement) {
-        const player = new Plyr(videoElement, {
-          // Optional: customize Plyr options here
-        });
+        const player = new Plyr(videoElement, {});
 
         player.on("loadeddata", () => {
           setActualDuration(player.duration);
         });
 
-        player.on("pause", () => {
-          setPauseTimestamp(player.currentTime);
-        });
-
         player.on("timeupdate", () => {
-          setPauseTimestamp(player.currentTime);
+          const time = player.currentTime;
+          const metadata = getCurrentMetadata(time);
+          console.log("metadata = ", metadata);
+          setPauseTimestamp(time);
+          setCurrentMetadata(metadata);
         });
 
-        return () => {
-          player.destroy();
-        };
-      } else {
-        console.error("Video element not found");
+        return () => player.destroy();
       }
     }
   }, [video]);
-
-  const getScreenshotName = (pausedTime: number) => {
-    if (actualDuration === null) {
-      return "Calculating...";
-    }
-
-    const pausedPercent = pausedTime / actualDuration;
-    const st = timeStringToSeconds(video.StartTime);
-    const et = timeStringToSeconds(video.EndTime);
-    const minutes = pausedPercent * (et - st) + st;
-
-    return formatTime(minutes);
-  };
 
   return (
     <div className="mediaPlayer" ref={playerRef}>
@@ -64,17 +80,20 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ video }) => {
         <source src={video.src} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-      <div className="videoDetail">
+
+      <div className="videoDetails">
         <div className="title">{video.title}</div>
         <div className="duration">
-          {actualDuration !== null
-            ? formatTime(actualDuration)
-            : video.duration}
+          {actualDuration !== null ? formatTime(actualDuration) : video.duration}
         </div>
-        {pauseTimestamp !== null && (
-          <div className="screenshotName">
-            Screenshot name: {pauseTimestamp}-
-            {getScreenshotName(pauseTimestamp)}
+
+        {pauseTimestamp !== null && currentMetadata && (
+          <div className="screenshot-container">
+            <FileCard
+              timestamp={pauseTimestamp}
+              screenshotName={formatTime(pauseTimestamp)}
+              fileInfo={currentMetadata}
+            />
           </div>
         )}
       </div>
@@ -82,28 +101,16 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ video }) => {
   );
 };
 
-// Helper functions
 const formatTime = (seconds: number): string => {
-  const date = new Date(seconds * 1000);
-  const hh = date.getUTCHours().toString().padStart(2, "0");
-  const mm = date.getUTCMinutes().toString().padStart(2, "0");
-  const ss = date.getUTCSeconds().toString().padStart(2, "0");
-  return `${hh}:${mm}:${ss}`;
-};
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
 
-const timeStringToSeconds = (timeString: string) => {
-  const timeParts = timeString.split(":").map(Number);
-  let seconds = 0;
-  if (timeParts.length === 1) {
-    seconds = timeParts[0];
-  } else if (timeParts.length === 2) {
-    seconds = timeParts[0] * 60 + timeParts[1];
-  } else if (timeParts.length === 3) {
-    seconds = timeParts[0] * 3600 + timeParts[1] * 60 + timeParts[2];
-  } else {
-    throw new Error("Invalid time format");
-  }
-  return seconds;
+  return [
+    hours.toString().padStart(2, '0'),
+    minutes.toString().padStart(2, '0'),
+    secs.toString().padStart(2, '0')
+  ].join(':');
 };
 
 export default MediaPlayer;

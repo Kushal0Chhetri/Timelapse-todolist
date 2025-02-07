@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4A1EB6F32CD043760091E6A8 /* applescript.csv in Resources */ = {isa = PBXBuildFile; fileRef = 4A1EB6F22CD043760091E6A8 /* applescript.csv */; };
+		4AE527D22D1E289A003633C2 /* SharedTimeStamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE527D12D1E2890003633C2 /* SharedTimeStamp.swift */; };
 		990721F32C472713000ED488 /* ApplescriptFileLoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 990721F22C472713000ED488 /* ApplescriptFileLoad.swift */; };
 		EA00F620294D227800D54360 /* setVideoPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA00F61E294D227800D54360 /* setVideoPath.swift */; };
 		EA00F621294D227800D54360 /* setVideoPath.xib in Resources */ = {isa = PBXBuildFile; fileRef = EA00F61F294D227800D54360 /* setVideoPath.xib */; };
@@ -41,6 +42,7 @@
 
 /* Begin PBXFileReference section */
 		4A1EB6F22CD043760091E6A8 /* applescript.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = applescript.csv; sourceTree = "<group>"; };
+		4AE527D12D1E2890003633C2 /* SharedTimeStamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTimeStamp.swift; sourceTree = "<group>"; };
 		990721F22C472713000ED488 /* ApplescriptFileLoad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplescriptFileLoad.swift; sourceTree = "<group>"; };
 		EA00F61E294D227800D54360 /* setVideoPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = setVideoPath.swift; sourceTree = "<group>"; };
 		EA00F61F294D227800D54360 /* setVideoPath.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = setVideoPath.xib; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 		EAF1010028D12BAE00065763 /* TimeLapseVideoProject */ = {
 			isa = PBXGroup;
 			children = (
+				4AE527D12D1E2890003633C2 /* SharedTimeStamp.swift */,
 				EAF1010128D12BAE00065763 /* AppDelegate.swift */,
 				EAF1010328D12BAE00065763 /* ViewController.swift */,
 				EAF1010A28D12BB600065763 /* Main.storyboard */,
@@ -253,6 +256,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AE527D22D1E289A003633C2 /* SharedTimeStamp.swift in Sources */,
 				EA00F623294D254300D54360 /* alertDialog.swift in Sources */,
 				EAF1010428D12BAE00065763 /* ViewController.swift in Sources */,
 				EA078254297505D30091F87E /* notificationClass.swift in Sources */,

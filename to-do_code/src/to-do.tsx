@@ -23,22 +23,21 @@ const Todo = () => {
         }
         const tasksData = await response.json();
 
-        // Map backend data to the format expected by your frontend
         const formattedTasks = tasksData.map((task: any) => ({
-          id: task.task_id, // Use task_id as id
-          taskName: task.task_name, // Rename task_name to taskName
-          files: [], // Initialize files array as empty
-          dueDate: new Date(task.due_date).toISOString(), // Format due_date as ISO string
+          id: task.task_id,
+          taskName: task.task_name,
+          files: task.files || [], // Keep any existing files from the backend
+          dueDate: new Date(task.due_date).toISOString(),
+          completed: task.completed || false
         }));
 
-        setTasks(formattedTasks); // Set formatted tasks to state
+        setTasks(formattedTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
       }
     };
-    fetchTasks(); // Call the function when the component mounts
-  }, []); // Empty dependency array to run the effect once
-
+    fetchTasks();
+  }, []);
 
   const handleAddTask = async () => {
     if (newTaskName.trim() === "" || newDueDate.trim() === "") {
@@ -84,8 +83,9 @@ const Todo = () => {
   };
 
 
+  // Update the onUpdateFile function to use File
   const onUpdateFile = (taskId: string, updatedFile: File) => {
-    const updatedTasks = tasks.map((task) => {
+    setTasks(tasks.map((task) => {
       if (task.id === taskId) {
         const updatedFiles = task.files.map((file) =>
           file.id === updatedFile.id ? updatedFile : file
@@ -93,20 +93,44 @@ const Todo = () => {
         return { ...task, files: updatedFiles };
       }
       return task;
-    });
-    setTasks(updatedTasks);
+    }));
   };
 
-  const onDeleteFile = (taskId: string, fileId: string) => {
-    const updatedTasks = tasks.map((task) => {
-      if (task.id === taskId) {
-        const updatedFiles = task.files.filter((file) => file.id !== fileId);
-        return { ...task, files: updatedFiles };
-      }
-      return task;
-    });
-    setTasks(updatedTasks);
-  };
+  // Update onDeleteFile to include proper error handling
+  const onDeleteFile = async (taskId: string, fileId: string) => {
+    try {
+        console.log('Attempting to delete file:', { taskId, fileId });
+        
+        const response = await fetch(`http://localhost:3000/delete-file/${fileId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ taskId }),
+        });
+
+        // Even if we get a 404, the file is gone from the database
+        // so we should update the UI regardless
+        setTasks(prevTasks => 
+            prevTasks.map(task => {
+                if (task.id === taskId) {
+                    return {
+                        ...task,
+                        files: task.files.filter(file => file.id !== fileId)
+                    };
+                }
+                return task;
+            })
+        );
+
+        if (!response.ok) {
+            console.log('Backend reported file not found, but UI is updated');
+        }
+
+    } catch (error) {
+        console.error('Error in delete operation:', error);
+    }
+};
 
   const onUpdateTask = async (
     taskId: string,
@@ -140,14 +164,59 @@ const Todo = () => {
   };
 
 
-  const onAddFile = (taskId: string, newFile: File) => {
-    const updatedTasks = tasks.map((task) => {
-      if (task.id === taskId) {
-        return { ...task, files: [...task.files, newFile] };
+  // Update onAddFile to use FileInfo and include proper error handling
+  const onAddFile = async (taskId: string, newFile: File) => {
+    try {
+      // Check for duplicates first
+      const task = tasks.find(t => t.id === taskId);
+      if (task?.files.some(f => f.fileName === newFile.fileName)) {
+        alert('A file with this name already exists');
+        return;
       }
-      return task;
-    });
-    setTasks(updatedTasks);
+
+      const fileData = {
+        taskId,
+        fileName: newFile.fileName,
+        fileLocation: newFile.location,
+        softwareName: newFile.softwareName
+      };
+
+      const response = await fetch('http://localhost:3000/add-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(fileData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add file');
+      }
+
+      const result = await response.json();
+
+      // Update local state only after successful database update
+      setTasks(prevTasks =>
+        prevTasks.map(task => {
+          if (task.id === taskId) {
+            const updatedFiles = [
+              ...task.files,
+              {
+                id: result.file_id.toString(),
+                fileName: result.file_name,
+                location: result.file_location,
+                softwareName: result.software_name || 'Unknown'
+              }
+            ];
+            return { ...task, files: updatedFiles };
+          }
+          return task;
+        })
+      );
+    } catch (error) {
+      console.error('Error adding file:', error);
+      alert('Failed to add file. Please try again.');
+    }
   };
 
   const onDeleteTask = async (taskId: string) => {
@@ -185,7 +254,7 @@ const Todo = () => {
           task.id === taskId ? { ...task, completed: isChecked } : task
         )
         .sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1))
-    );    
+    );
   };
 
 

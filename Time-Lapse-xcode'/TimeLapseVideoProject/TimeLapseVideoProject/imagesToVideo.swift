@@ -100,9 +100,8 @@ class ImageAnimator {
             ImageAnimator.saveToLibrary(videoURL: self.settings.outputURL)
             completion?()
         }
-
     }
-
+    
     // This is the callback function for VideoWriter.render()
     func appendPixelBuffers(writer: VideoWriter) -> Bool {
 

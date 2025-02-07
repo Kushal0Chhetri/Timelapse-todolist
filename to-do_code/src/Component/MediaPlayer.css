@@ -2,36 +2,54 @@
 
 /* Style the mediaPlayer container */
 .mediaPlayer {
-    position: relative;
-    width: 70%; /* Make sure container takes full width */
-    max-width: 70%; /* Ensure it does not exceed the viewport width */
-    height: auto; /* Adjust height automatically based on video aspect ratio */
-    display: flex; /* Use flexbox to center video if needed */
-    justify-content: center; /* Center video horizontally */
-    flex-direction: column; /* Stack children vertically */
-    align-items: left; 
-  }
-  
-  /* Style the video element */
-  video {
-    width: 100%; /* Set video width to 70% of its container */
-    height: auto; /* Maintain aspect ratio */
-    display: block; /* Prevent extra spacing */
-  }
+  position: relative;
+  width: 70%;
+  /* Make sure container takes full width */
+  max-width: 70%;
+  /* Ensure it does not exceed the viewport width */
+  height: auto;
+  /* Adjust height automatically based on video aspect ratio */
+  display: flex;
+  /* Use flexbox to center video if needed */
+  justify-content: center;
+  /* Center video horizontally */
+  flex-direction: column;
+  /* Stack children vertically */
+  align-items: left;
+  max-height: calc(100vh - 40px);
+  /* Subtract some pixels for padding/margins */
+  overflow: scroll;
+  /* Enable vertical scrolling */
+}
 
-  .videoDetails {
-    width: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Optional: background color with some transparency */
-    color: white; /* Text color */
-    padding: 10px; /* Padding around the text */
-    box-sizing: border-box; /* Include padding in width calculation */
-    margin-top: 10px; /* Space between video and info */
-  }
+/* Style the video element */
+.video {
+  width: 100%;
+  /* Set video width to 70% of its container */
+  height: auto;
+  /* Maintain aspect ratio */
+  display: block;
+  /* Prevent extra spacing */
+}
 
-  /* Add CSS for tooltips (thumbnails) */
+.videoDetails {
+  width: 100%;
+  /* background: rgba(0, 0, 0, 0.7); */
+  /* Optional: background color with some transparency */
+  color: black;
+  /* Text color */
+  padding: 10px;
+  /* Padding around the text */
+  box-sizing: border-box;
+  /* Include padding in width calculation */
+  margin-top: 10px;
+  /* Space between video and info */
+}
+
+/* Add CSS for tooltips (thumbnails) */
 .plyr__tooltip {
-    background: rgba(0, 0, 0, 0.75);
-    color: #fff;
-    border-radius: 3px;
-    padding: 5px;
-  }
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  border-radius: 3px;
+  padding: 5px;
+}

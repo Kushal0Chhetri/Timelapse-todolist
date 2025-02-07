@@ -3,6 +3,7 @@ import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Task as TaskType, File as CustomFile } from "../TaskData";
 import FileComponent from "./FileComponent";
+import { File } from '../TaskData';
 import {
   faPencilAlt,
   faTrash,
@@ -14,6 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "./Tasks.css";
 import { CSSTransition, TransitionGroup } from "react-transition-group"; // New imports for animation
+import { useDrop } from 'react-dnd';
 
 interface TaskProps {
   task: TaskType;
@@ -52,7 +54,28 @@ const Task: React.FC<TaskProps> = ({
   const [deleteTarget, setDeleteTarget] = useState<"task" | "file">("task");
   const [fileIdToDelete, setFileIdToDelete] = useState<string | null>(null);
 
-
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'FILE',
+    drop: (item: {
+      fileName: string,
+      location: string,
+      softwareName: string,
+      timestamp: string
+    }) => {
+      console.log("Dropping item:", item); // Debug log
+      const newFile: File = {
+        id: Date.now().toString(),
+        fileName: item.fileName,
+        location: item.location,
+        softwareName: item.softwareName
+      };
+      onAddFile(task.id, newFile);
+    },
+    collect: monitor => ({
+      isOver: !!monitor.isOver()
+    })
+  }), [task.id, onAddFile]); // Add dependencies array
+  
   const confirmDeleteTask = () => {
     setDeleteTarget("task");
     setShowDeleteModal(true);
@@ -98,81 +121,62 @@ const Task: React.FC<TaskProps> = ({
     }
   };
 
-
   const handleEditTask = () => {
     onUpdateTask(id, { taskName: newTaskName, dueDate: newDueDate });
     toggleEditModal();
   };
 
-  const handleAddFile = async () => {
+  // Keep handleAddFile in Tasks.tsx but modify it
+  const handleAddFile = () => {
     if (newFile && newFileName.trim() !== "") {
-      const newFileObj: CustomFile = {
+      const fileData = {
         id: Date.now().toString(),
-        fileName: newFileName,
-        location: URL.createObjectURL(newFile as Blob), // Use type assertion here
+        fileName: newFileName.trim(),
+        location: URL.createObjectURL(newFile),
+        softwareName: 'Unknown'
       };
 
-      try {
-        const response = await fetch("http://localhost:3000/add-file", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            fileName: newFileName,
-            fileLocation: URL.createObjectURL(newFile), // Use the file location here
-            taskId: id, // Pass the task ID
-          }),
-        });
+      // Call parent's onAddFile
+      onAddFile(id, fileData);
 
-        if (!response.ok) {
-          throw new Error("Failed to add file");
-        }
-
-        const addedFile = await response.json();
-        console.log("File added successfully:", addedFile);
-
-        // Add the new file to the task's files
-        onAddFile(id, newFileObj);
-        setNewFileName("");
-        setNewFile(null);
-        toggleAddFileModal();
-        toggleFileDropdown();
-      } catch (error) {
-        console.error("Error adding file:", error);
-        alert("Failed to add file, please try again.");
-      }
+      // Clear form and close modal
+      setNewFileName("");
+      setNewFile(null);
+      toggleAddFileModal();
+    } else {
+      alert("Please provide a file name and select a file");
     }
   };
 
   // Function to fetch files when user clicks the dropdown
   const fetchFilesOnDropdownClick = async () => {
-    if (!isFileDropdownOpen && files.length === 0) { // Fetch files only if not already loaded
-      try {
+    try {
+      if (!isFileDropdownOpen) {
         const response = await fetch(`http://localhost:3000/get-files/${id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch files");
         }
         const filesData = await response.json();
-        console.log("Fetched files data: ", filesData); // Add this line
-        filesData.forEach((file: CustomFile) => onAddFile(id, file)); // Add each file to the task
-      } catch (error) {
-        console.error("Error fetching files:", error);
-      }
-    }
-    setIsFileDropdownOpen(!isFileDropdownOpen); // Toggle dropdown
-  };
+        console.log("Fetched files data: ", filesData);
 
+        // Just update the files array directly
+        task.files = filesData;
+      }
+      setIsFileDropdownOpen(!isFileDropdownOpen);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    }
+  };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onCheckboxChange(id, e.target.checked); // Notify parent component
   };
 
-  const handleFileInputChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setNewFile(event.target.files[0]); // Store the native File object
+  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      setNewFile(file);
     }
   };
 
@@ -182,7 +186,11 @@ const Task: React.FC<TaskProps> = ({
 
   return (
     <>
-      <div className={`task-wrapper ${task.completed ? 'completed-task' : ''}`}>
+      <div
+        ref={drop}
+        className={`task-wrapper ${task.completed ? 'completed-task' : ''} 
+              ${isOver ? 'bg-blue-50 border-2 border-blue-500' : ''}`}
+      >
         <div className="task-row">
           <input
             type="checkbox"

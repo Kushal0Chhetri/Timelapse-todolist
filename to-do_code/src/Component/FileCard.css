@@ -1,0 +1,65 @@
+.file-card {
+    background: white;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 10px 0;
+    cursor: move;
+    transition: all 0.2s ease;
+    width: 60%;
+  }
+  
+  .file-card.dragging {
+    opacity: 0.5;
+    border: 2px dashed #007bff;
+  }
+  
+  .file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .file-name {
+    font-weight: 600;
+    font-size: 1.1em;
+    color: #333;
+  }
+  
+  .timestamp {
+    margin-top: 10px;
+    color: #666;
+    font-size: 0.9em;
+  }
+  
+  .file-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .software-name,
+  .location {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  
+  .label {
+    color: #666;
+    font-size: 0.9em;
+    min-width: 70px;
+  }
+  
+  .location-text {
+    word-break: break-all;
+    color: #0066cc;
+  }
+  
+  .no-screenshot {
+    padding: 16px;
+    text-align: center;
+    color: #666;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }

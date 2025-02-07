@@ -26,7 +26,7 @@ struct Repository {
 }
 
 struct Setting {
-    static var frameRate : Int                      =   12
+    static var frameRate : Int                      =   6
     static var captureInterval : Int                =   10
 }
 
@@ -52,7 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
 
     // private var window: NSWindow!
-    
+    private let recordingSession = RecordingSession.shared
     private var statusItem: NSStatusItem!
     
     private var startButton: NSMenuItem!
@@ -255,15 +255,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         // set button attributes
         let startButtonTitle = startButton.title
         print("startButtonTitle: ", startButtonTitle)
+        let takeScreenshotsObject = takeScreenshots()
         if (startButtonTitle == "Start Recording"){
             startButton.title = "Stop Recording"
  
             self.statusItem.button?.image = NSImage(named: "recordIcon");
             // set the recording flag to true
             recordingFlag = true
-            let takeScreenshotsObject = takeScreenshots()
+            takeScreenshotsObject.startRecording()  // Start recording session
             takeScreenshotsObject.creatFolderForTodayRecording()
-            
             takeScreenshotsObject.takeANewScreenshotWithFormattedDateName()
 
             // not taking a ascreenshot at the time when click this button
@@ -276,7 +276,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             // set the recording flag to false
             self.statusItem.button?.image = NSImage(named: "videoIcon");
             recordingFlag = false
-            
+            takeScreenshotsObject.stopRecording()  // Stop recording session
             // stop the timer
             self.takingScreenshotsTimer.invalidate()
         }
@@ -375,6 +375,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         // step 2: for each folder, create a video name and check if it is already existed in the video folder
         // step 3: create video for corresponding screenshot folders
         // step 4: corner cases: today and yesterday, no matter what, generate two videos for covering all screenshots
+        
+        if let timestamp = recordingSession.startTimestamp {
+            print("Using recording timestamp: \(timestamp)")
+        }
         
         var screenshotFolderNameList = [String]()
         var screenshotFolderNameListCount = 0
@@ -476,11 +480,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
                 var isToday = checkToday(str: scrFolderName)
                 if(isToday) {
                     //
-                    print("vidoe does not existed and isToday")
+                    print("video does not existed and isToday")
                     ffmpegHandler.createAndOverwriteTimeLapseVideo(inputFilePath: tempFolderNameInputFilePath, outputFilePath: defaultOutputPath)
                 }
                 else {
-                    print("vidoe does not existed and is not Today")
+                    print("video does not existed and is not Today")
                     // this is not today's screenshot folder, forgot to create videos in the past few days
                     // step 1: create videos for this screenshot folder
                     ffmpegHandler.createAndOverwriteTimeLapseVideoForPastDate(scrFolderName: scrFolderName, inputFilePath: tempFolderNameInputFilePath, outputFilePath: defaultOutputPath)
@@ -557,21 +561,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         
     }
     
-    func transferScreenshotFolderToVideoFolder(folderName: String) -> String{
+    func transferScreenshotFolderToVideoFolder(folderName: String) -> String {
         let components = folderName.components(separatedBy: "-")
         var month = components[0]
         var day = components[1]
         var year = components[2]
-        if (month.count < 2){
+        if (month.count < 2) {
             month = "0" + month
         }
-        if(day.count < 2){
+        if(day.count < 2) {
             day = "0" + day
         }
-        // + ".mp4"?
-        return "TimeLapseVideo" + month + day + year + ".mp4"
-        // return month + "-" + day + "-" + year
         
+        return "TimeLapseVideo\(month)\(day)\(year).mp4"
     }
     
     // function to create all videos that are missing
@@ -841,6 +843,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         
         // Set button attributes based on current recording state
         let startButtonTitle = startButton.title
+        let takeScreenshotsObject = takeScreenshots()
+        
         if startButtonTitle == "Start Recording" {
             startButton.title = "Stop Recording"
             self.statusItem.button?.image = NSImage(named: "recordIcon")
@@ -853,7 +857,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             
             // Set the recording flag to true
             recordingFlag = true
-            let takeScreenshotsObject = takeScreenshots()
+            takeScreenshotsObject.startRecording()  // Start recording session
             takeScreenshotsObject.creatFolderForTodayRecording()
             takeScreenshotsObject.takeANewScreenshotWithFormattedDateName()
             
@@ -873,7 +877,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             
             // Set the recording flag to false
             recordingFlag = false
-            
+            takeScreenshotsObject.stopRecording()  // Stop recording session
             // Stop the timer
             self.takingScreenshotsTimer.invalidate()
         }

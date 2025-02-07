@@ -33,6 +33,9 @@ export interface Video {
   StartTime: string;
   EndTime: string;
   src: string;
+  screenshots: {
+    [timestamp: string]: File;  // Map timestamps to File objects
+  };
 }
 
 export const videos: Video[] = [
@@ -44,6 +47,33 @@ export const videos: Video[] = [
     StartTime: "13:22:46",
     EndTime: "null",
     src: "TimeLapseVideo07312024.mp4",
+    screenshots: {
+      // Add a screenshot every 5 seconds for testing
+      "00:00:00": {
+        id: "1",
+        fileName: "Homepage - Chrome",
+        location: "https://www.google.com",
+        softwareName: "Google Chrome"
+      },
+      "00:00:02": {
+        id: "2",
+        fileName: "Project Documentation",
+        location: "/Users/documents/project.md",
+        softwareName: "Visual Studio Code"
+      },
+      "00:00:04": {
+        id: "3",
+        fileName: "Email Client",
+        location: "https://mail.google.com",
+        softwareName: "Google Chrome"
+      },
+      "00:00:05": {
+        id: "4",
+        fileName: "Terminal",
+        location: "Terminal App",
+        softwareName: "Terminal"
+      }
+    }
   },
   {
     id: 2,
@@ -53,6 +83,14 @@ export const videos: Video[] = [
     StartTime: "13:22:46",
     EndTime: "null",
     src: "TimeLapseVideo07132024.mp4",
+    screenshots: {
+      "00:00:03": {
+        id: "3",
+        fileName: "React Documentation - Components",
+        location: "https://react.dev/docs/components",
+        softwareName: "Firefox"
+      }
+    }
   },
   {
     id: 3,
@@ -62,6 +100,20 @@ export const videos: Video[] = [
     StartTime: "13:22:46",
     EndTime: "null",
     src: "TimeLapseVideo07142024.mp4",
+    screenshots: {
+      "00:00:05": {
+        id: "1",
+        fileName: "Personalizing your profile - GitHub Docs",
+        location: "https://docs.github.com/en/account-and-profile/customizing-your-profile",
+        softwareName: "Google Chrome"
+      },
+      "00:00:10": {
+        id: "2",
+        fileName: "Machine Learning Project - Jupyter Notebook",
+        location: "/Users/documents/ML_Project.ipynb",
+        softwareName: "Visual Studio Code"
+      }
+    }
   },
   {
     id: 4,
@@ -71,6 +123,20 @@ export const videos: Video[] = [
     StartTime: "13:22:46",
     EndTime: "null",
     src: "TimeLapseVideo07102024.mp4",
+    screenshots: {
+      "00:00:05": {
+        id: "1",
+        fileName: "Personalizing your profile - GitHub Docs",
+        location: "https://docs.github.com/en/account-and-profile/customizing-your-profile",
+        softwareName: "Google Chrome"
+      },
+      "00:00:10": {
+        id: "2",
+        fileName: "Machine Learning Project - Jupyter Notebook",
+        location: "/Users/documents/ML_Project.ipynb",
+        softwareName: "Visual Studio Code"
+      }
+    }
   },
 
   {
@@ -81,6 +147,20 @@ export const videos: Video[] = [
     StartTime: "13:22:46",
     EndTime: "13:41:45",
     src: "TimeLapseVideo08052024.mp4",
+    screenshots: {
+      "00:00:05": {
+        id: "1",
+        fileName: "Personalizing your profile - GitHub Docs",
+        location: "https://docs.github.com/en/account-and-profile/customizing-your-profile",
+        softwareName: "Google Chrome"
+      },
+      "00:00:10": {
+        id: "2",
+        fileName: "Machine Learning Project - Jupyter Notebook",
+        location: "/Users/documents/ML_Project.ipynb",
+        softwareName: "Visual Studio Code"
+      }
+    }
   },
 ];
 
@@ -94,7 +174,8 @@ export interface Task {
 }
 
 export interface File {
-  id: string;
+  id?: string;
   fileName: string;
   location: string;
+  softwareName: string;
 }
